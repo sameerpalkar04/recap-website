@@ -25,13 +25,20 @@ export default function App() {
 
   return (
     <div style={{ maxWidth: '600px', margin: '0 auto', padding: '1rem' }}>
-      <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>📺 Show Recap Generator</h1>
+      <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>Show Recap Generator</h1>
       <ShowSelector onGenerate={handleGenerate} />
       {loading && <p>Generating recap...</p>}
       {recap && (
         <div style={{ marginTop: '1rem', padding: '1rem', border: '1px solid #ddd', borderRadius: '8px' }}>
           <h2>Recap:</h2>
-          <p>{recap}</p>
+          <p
+            style={{
+              whiteSpace: 'pre-line', // <-- This makes \n render as new lines
+              lineHeight: '1.5',
+            }}
+          >
+            {recap}
+          </p>
         </div>
       )}
     </div>
