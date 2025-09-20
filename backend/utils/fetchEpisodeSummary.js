@@ -1,12 +1,8 @@
+import 'dotenv/config';
 import axios from 'axios';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
-/**
- * Fetches the exact episode summary using TVmaze API
- * @param {string} show - The name of the TV show
- * @param {number} episode_no - The episode number
- * @param {number} season_no - The season number
- * @returns {string} - Episode-specific recap
- */
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 async function fetchEpisodeSummary(show, episode_no, season_no = 1) {
   try {
@@ -21,42 +17,56 @@ async function fetchEpisodeSummary(show, episode_no, season_no = 1) {
     console.log('Total episodes available:', episodes.length);
 
     const selectedEpisodes = episodes.filter(
-      (ep)=>
-        ep.season < season_no || (ep.season === season_no && ep.number <= episode_no)
+      (ep) => ep.season < season_no || (ep.season === season_no && ep.number <= episode_no)
     );
 
     console.log(`Episodes included: ${selectedEpisodes.length}`);
 
-    if(selectedEpisodes.length === 0) {
+    if (selectedEpisodes.length === 0) {
       return `No episodes found for ${show} up to S${season_no}E${episode_no}.`;
     }
 
-    // Group episodes season-wise
-    const seasonsMap = new Map();
+    // Build raw recap
+    let rawRecap = `Recap of ${show} (S1E1 → S${season_no}E${episode_no}):\n\n`;
 
+    const seasonsMap = new Map();
     for (const ep of selectedEpisodes) {
-      const plainSummary = ep.summary 
+      const plainSummary = ep.summary
         ? ep.summary.replace(/<[^>]+>/g, '')
         : 'No summary available.';
 
-      const episodeRecap = `E${ep.number}-${ep.name}: \n${plainSummary}\n`;
-
-      if(!seasonsMap.has(ep.season)) {
-        seasonsMap.set(ep.season, []);
-      }
-
-      seasonsMap.get(ep.season).push(episodeRecap);
+      if (!seasonsMap.has(ep.season)) seasonsMap.set(ep.season, []);
+      seasonsMap.get(ep.season).push(`E${ep.number}-${ep.name}: ${plainSummary}`);
     }
-
-    let recapOutput = `Recap of ${show} (S1E1 → S${season_no}E${episode_no}):\n\n`;
 
     for (const [season, episodesList] of [...seasonsMap.entries()].sort((a, b) => a[0] - b[0])) {
-      recapOutput += `=== Season ${season} ===\n\n`;
-      recapOutput += episodesList.join('');
-      recapOutput += '\n';
+      rawRecap += `=== Season ${season} ===\n${episodesList.join('\n')}\n\n`;
     }
 
-    return recapOutput.trim();
+    // Send to Gemini for summarization
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+    const prompt = `
+You are an expert TV show analyst and recap writer.
+Summarize the following episode descriptions in a detailed, engaging, and easy-to-read season-wise recap.
+Include the following in the summary:
+- Key plot developments
+- Character arcs and relationships
+- Themes or conflicts introduced or resolved
+- Memorable moments or turning points
+- Avoid spoilers for future seasons beyond the requested episode
+
+Organize clearly by season and episode order, and make it read like a cohesive narrative rather than a list.
+
+Episode data:
+
+${rawRecap}
+    `;
+
+    const result = await model.generateContent(prompt);
+    const aiSummary = result.response.text();
+
+    return aiSummary.trim();
   } catch (err) {
     console.error('Error fetching episode summary:', err.message);
     return `Could not fetch recap for ${show} episode ${episode_no}.`;
@@ -64,3 +74,4 @@ async function fetchEpisodeSummary(show, episode_no, season_no = 1) {
 }
 
 export default fetchEpisodeSummary;
+
