@@ -621,12 +621,19 @@ main {
     0 0 50px rgba(196, 188, 188, 0.1);
 }
 
+.show-selector-title {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
 /* Form Elements */
-.form-group {
+.show-input {
   margin-bottom: 1.5rem;
 }
 
-.form-label {
+.show-input {
   display: block;
   color: #e5e7eb;
   font-weight: 600;
@@ -636,7 +643,7 @@ main {
   text-transform: uppercase;
 }
 
-.form-input, .form-select {
+.show-input {
   width: 100%;
   background: rgba(2, 2, 3, 0.8);
   border: 2px solid rgba(75, 85, 99, 0.5);
@@ -648,19 +655,23 @@ main {
   backdrop-filter: blur(10px);
 }
 
-.form-input:focus, .form-select:focus {
+.show-input:focus {
   outline: none;
   border-color: #dc2626;
   box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
   background: rgba(17, 24, 39, 0.95);
 }
 
-.form-input::placeholder {
+.show-input::placeholder {
   color: #6b7280;
 }
 
 /* Enhanced Generate Button */
-.generate-button {
+.btn-generate {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
   width: 100%;
   background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
   border: none;
@@ -678,7 +689,13 @@ main {
   margin-top: 1rem;
 }
 
-.generate-button::before {
+.btn-generate svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+}
+
+.btn-generate::before {
   content: '';
   position: absolute;
   top: 0;
@@ -689,21 +706,21 @@ main {
   transition: left 0.5s ease;
 }
 
-.generate-button:hover::before {
+.btn-generate:hover::before {
   left: 100%;
 }
 
-.generate-button:hover {
+.btn-generate:hover {
   transform: translateY(-2px);
   box-shadow: 0 20px 40px rgba(220, 38, 38, 0.4);
   background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
 }
 
-.generate-button:active {
+.btn-generate:active {
   transform: translateY(0);
 }
 
-.generate-button:disabled {
+.btn-generate:disabled {
   opacity: 0.6;
   cursor: not-allowed;
   transform: none;
