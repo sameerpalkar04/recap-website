@@ -1,61 +1,58 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
+import { Play } from 'lucide-react';
+import '../styles.css';
 
 interface Props {
   onGenerate: (show: string, season: number, episode: number) => void;
+  selectedShow?: string; // ✅ optional prop
 }
 
-export default function ShowSelector({ onGenerate }: Props) {
-  const [show, setShow] = useState('');
-  const [season, setSeason] = useState<number | ''>(1); // default season 1
+export default function ShowSelector({ onGenerate, selectedShow }: Props) {
+  const [show, setShow] = useState(selectedShow || '');
+  const [season, setSeason] = useState<number | ''>(1);
   const [episode, setEpisode] = useState<number | ''>('');
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (show && season && episode) onGenerate(show, Number(season), Number(episode));
+    if ((selectedShow || show) && season && episode) {
+      onGenerate(selectedShow || show, Number(season), Number(episode));
+    }
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '1rem' }}
-    >
-      <input
-        placeholder="Enter Show Name"
-        value={show}
-        onChange={(e) => setShow(e.target.value)}
-        style={{ padding: '0.5rem', border: '1px solid #ccc', borderRadius: '4px' }}
-      />
+    <form onSubmit={handleSubmit} className="show-selector-form">
+      <h3 className="text-lg font-bold mb-4">
+        Select Episode {selectedShow ? `for ${selectedShow}` : ''}
+      </h3>
+
+      {/* ✅ Show input only if no selectedShow passed */}
+      {!selectedShow && (
+        <input
+          type="text"
+          placeholder="Enter Show Name"
+          value={show}
+          onChange={(e) => setShow(e.target.value)}
+        />
+      )}
 
       <input
         type="number"
         placeholder="Enter Season Number"
         value={season}
         onChange={(e) => setSeason(e.target.value ? Number(e.target.value) : '')}
-        style={{ padding: '0.5rem', border: '1px solid #ccc', borderRadius: '4px' }}
         min={1}
       />
-
       <input
         type="number"
         placeholder="Enter Episode Number"
         value={episode}
         onChange={(e) => setEpisode(e.target.value ? Number(e.target.value) : '')}
-        style={{ padding: '0.5rem', border: '1px solid #ccc', borderRadius: '4px' }}
         min={1}
       />
 
-      <button
-        type="submit"
-        style={{
-          backgroundColor: '#007BFF',
-          color: '#fff',
-          padding: '0.5rem',
-          border: 'none',
-          borderRadius: '4px',
-          cursor: 'pointer',
-        }}
-      >
-        Generate Recap
+      <button type="submit" className="flex items-center gap-2 mt-3">
+        <Play />
+        <span>Generate Recap</span>
       </button>
     </form>
   );

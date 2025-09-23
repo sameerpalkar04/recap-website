@@ -1,1 +1,1 @@
-{"name":"recap-website","private":true,"workspaces":["backend","frontend"],"scripts":{"dev":"npm run dev --workspace=backend & npm run dev --workspace=frontend","install:all":"npm install --workspaces"},"dependencies":{"@google/generative-ai":"^0.24.1"}}
+{"name":"recap-website","private":true,"workspaces":["backend","frontend"],"scripts":{"dev":"npm run dev --workspace=backend & npm run dev --workspace=frontend","install:all":"npm install --workspaces"},"dependencies":{"@google/generative-ai":"^0.24.1","lucide-react":"^0.544.0","react-router-dom":"^7.9.1"}}
