@@ -21,39 +21,44 @@ export default function ShowSelector({ onGenerate, selectedShow }: Props) {
 
   return (
     <form onSubmit={handleSubmit} className="show-selector-form">
-      <h3 className="text-lg font-bold mb-4">
+      <h3 className="show-selector-title">
         Select Episode {selectedShow ? `for ${selectedShow}` : ''}
       </h3>
 
-      {/* ✅ Show input only if no selectedShow passed */}
+      {/* Show input only if no selectedShow passed */}
       {!selectedShow && (
         <input
-          type="text"
-          placeholder="Enter Show Name"
-          value={show}
-          onChange={(e) => setShow(e.target.value)}
-        />
-      )}
-
-      <input
-        type="number"
-        placeholder="Enter Season Number"
-        value={season}
-        onChange={(e) => setSeason(e.target.value ? Number(e.target.value) : '')}
-        min={1}
+        type="text"
+        placeholder="Enter Show Name"
+        value={show}
+        onChange={(e) => setShow(e.target.value)}
+        className="show-input show-name-input"
       />
-      <input
-        type="number"
-        placeholder="Enter Episode Number"
-        value={episode}
-        onChange={(e) => setEpisode(e.target.value ? Number(e.target.value) : '')}
-        min={1}
-      />
+    )}
 
-      <button type="submit" className="flex items-center gap-2 mt-3">
-        <Play />
-        <span>Generate Recap</span>
-      </button>
-    </form>
+  <input
+    type="number"
+    placeholder="Enter Season Number"
+    value={season}
+    onChange={(e) => setSeason(e.target.value ? Number(e.target.value) : '')}
+    min={1}
+    className="show-input"
+  />
+
+  <input
+    type="number"
+    placeholder="Enter Episode Number"
+    value={episode}
+    onChange={(e) => setEpisode(e.target.value ? Number(e.target.value) : '')}
+    min={1}
+    className="show-input"
+  />
+
+  <button type="submit" className="btn-generate">
+    <Play />
+    <span>Generate Recap</span>
+  </button>
+</form>
+
   );
 }

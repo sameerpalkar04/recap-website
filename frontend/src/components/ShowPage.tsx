@@ -16,12 +16,11 @@ export default function ShowPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          show: showName || show, // ✅ uses URL showName if available
+          show: showName || show,
           season_no: season,
           episode_no: episode,
         }),
       });
-
       const data = await res.json();
       setRecap(data.summary);
     } catch (err) {
@@ -34,31 +33,45 @@ export default function ShowPage() {
   return (
     <>
       <Navbar />
-      <div className="bg-black min-h-screen text-white pt-24 px-6">
-        {/* ✅ Show title from URL */}
-        <h2 className="text-3xl font-bold text-red-600 mb-6 text-center">
-          {showName}
-        </h2>
+      <div className="show-page-container">
+        {/* Enhanced Show Title */}
+        <h1 className="show-title">
+          {showName ? showName.replace(/-/g, ' ') : 'Select a Show'}
+        </h1>
+        <p className="show-subtitle">
+          Select Episode for {showName ? showName.replace(/-/g, ' ') : 'Your Show'}
+        </p>
 
-        {/* Pass selected show name to ShowSelector */}
-        <div className="max-w-lg mx-auto bg-gray-900 p-6 rounded-xl shadow-lg">
-          <ShowSelector onGenerate={handleGenerate} selectedShow={showName || ''} />
+        {/* Enhanced Show Selector */}
+        <div className="show-selector-container slide-up">
+          <ShowSelector 
+            onGenerate={handleGenerate} 
+            selectedShow={showName || ''} 
+          />
         </div>
 
-        {/* Loading State */}
+        {/* Enhanced Loading State */}
         {loading && (
-          <p className="mt-4 text-center text-gray-400 animate-pulse">
-            Fetching recap...
-          </p>
+          <div className="loading-container fade-in">
+            <div className="loading-spinner"></div>
+            <p className="loading-text">
+              Generating your recap...
+            </p>
+          </div>
         )}
 
-        {/* Recap Output */}
-        {recap && (
-          <div className="mt-6 p-4 bg-gray-800 rounded-xl max-w-lg mx-auto">
-            <h3 className="text-red-400 font-bold mb-2">Recap:</h3>
-            <p className="whitespace-pre-line leading-relaxed text-gray-200">
+        {/* Enhanced Recap Output */}
+        {recap && !loading && (
+          <div className="recap-container">
+            <div className="recap-header">
+              <svg className="recap-icon" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+              </svg>
+              <h3 className="recap-title">Episode Recap</h3>
+            </div>
+            <div className="recap-content">
               {recap}
-            </p>
+            </div>
           </div>
         )}
       </div>

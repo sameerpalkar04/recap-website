@@ -31,8 +31,7 @@ export default function Navbar() {
     <ul className="navbar-menu">
       <li onClick={() => navigate('/')}>Home</li>
       <li>TV Shows</li>
-      <li>Movies</li>
-      <li>My List</li>
+      <li>My Recaps</li>
     </ul>
   </div>
 
