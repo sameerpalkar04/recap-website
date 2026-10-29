@@ -1,51 +1,31 @@
-import { useEffect, useState } from 'react';
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import ShowPage from './components/ShowPage';
-import ShowRow from './components/ShowRow';
-import Slideshow from './components/Slideshow';
-import Footer from './components/Footer'; // import Footer
-import type { TVShow } from './api/tmdb';
-import { fetchPopularShows } from './api/tmdb';
+import HomePage from './components/HomePage';
+import ShowsPage from './components/ShowsPage';
+import MyRecapsPage from './components/MyRecapsPage';
+import Footer from './components/Footer';
+import AuthPage from './components/AuthPage';
+import AuthCallbackPage from './components/AuthCallbackPage';
 import './styles.css';
-
-function MainContent() {
-  const location = useLocation();
-  const [shows, setShows] = useState<TVShow[]>([]);
-
-  useEffect(() => {
-    async function loadShows() {
-      const popularShows = await fetchPopularShows();
-      setShows(popularShows);
-    }
-    loadShows();
-  }, []);
-
-  return (
-    <main>
-      {location.pathname === '/' && <Slideshow />}
-
-      <div className="show-row-wrapper">
-        <Routes>
-          <Route
-            path="/"
-            element={<ShowRow title="Popular Shows" shows={shows} />}
-          />
-          <Route path="/show/:showName" element={<ShowPage />} />
-        </Routes>
-      </div>
-
-      {/* Footer component */}
-      <Footer />
-    </main>
-  );
-}
 
 export default function App() {
   return (
     <BrowserRouter>
       <Navbar />
-      <MainContent />
+      <main>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/login" element={<AuthPage mode="login" />} />
+          <Route path="/signup" element={<AuthPage mode="signup" />} />
+          <Route path="/auth/callback" element={<AuthCallbackPage />} />
+          <Route path="/shows" element={<ShowsPage />} />
+          <Route path="/recaps" element={<MyRecapsPage />} />
+          <Route path="/show/:showName" element={<ShowPage />} />
+          <Route path="*" element={<HomePage />} />
+        </Routes>
+        <Footer />
+      </main>
     </BrowserRouter>
   );
 }

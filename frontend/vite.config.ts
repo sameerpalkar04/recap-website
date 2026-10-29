@@ -8,7 +8,7 @@ export default defineConfig({
     port: 5173,
     strictPort: false, // Allow Vite to use alternative ports if 5173 is taken
     proxy: {
-      '/generate-recap': {
+      '/api': {
         target: 'http://localhost:3001',
         changeOrigin: true,
         secure: false

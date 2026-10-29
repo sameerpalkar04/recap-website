@@ -4,17 +4,19 @@ import '../styles.css';
 
 interface Props {
   onGenerate: (show: string, season: number, episode: number) => void;
-  selectedShow?: string; // ✅ optional prop
+  selectedShow?: string;
+  isLoading?: boolean;
+  loadingLabel?: string;
 }
 
-export default function ShowSelector({ onGenerate, selectedShow }: Props) {
+export default function ShowSelector({ onGenerate, selectedShow, isLoading = false, loadingLabel }: Props) {
   const [show, setShow] = useState(selectedShow || '');
   const [season, setSeason] = useState<number | ''>(1);
   const [episode, setEpisode] = useState<number | ''>('');
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if ((selectedShow || show) && season && episode) {
+    if (!isLoading && (selectedShow || show) && season && episode) {
       onGenerate(selectedShow || show, Number(season), Number(episode));
     }
   }
@@ -54,9 +56,9 @@ export default function ShowSelector({ onGenerate, selectedShow }: Props) {
     className="show-input"
   />
 
-  <button type="submit" className="btn-generate">
-    <Play />
-    <span>Generate Recap</span>
+  <button type="submit" className="btn-generate" disabled={isLoading}>
+    {isLoading ? <span className="button-line-loader" aria-hidden="true"><i /></span> : <Play />}
+    <span>{isLoading ? (loadingLabel || 'Generating…') : 'Generate Recap'}</span>
   </button>
 </form>
 

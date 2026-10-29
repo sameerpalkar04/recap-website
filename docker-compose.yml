@@ -1,0 +1,121 @@
+services:
+  edge:
+    image: traefik:v3.7.16
+    restart: unless-stopped
+    command:
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --providers.docker.network=afterword-edge
+      - --entrypoints.web.address=:80
+      - --accesslog=true
+      - --log.level=INFO
+    ports:
+      - "${HTTP_PORT:-8080}:80"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - edge-network
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    restart: unless-stopped
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=afterword-edge
+      - traefik.http.routers.frontend.rule=Host(`${APP_HOST:-localhost}`)
+      - traefik.http.routers.frontend.entrypoints=web
+      - traefik.http.routers.frontend.priority=1
+      - traefik.http.services.frontend.loadbalancer.server.port=8080
+    networks:
+      - edge-network
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    restart: unless-stopped
+    init: true
+    env_file:
+      - backend/.env
+    environment:
+      PORT: 3001
+      NODE_ENV: production
+      TRUST_PROXY: "true"
+      CORS_ORIGIN: ${APP_ORIGIN:-http://localhost:8080}
+      FRONTEND_URL: ${APP_ORIGIN:-http://localhost:8080}
+      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:-http://localhost:8080/api/auth/google/callback}
+      AUTH_COOKIE_SECURE: ${AUTH_COOKIE_SECURE:-false}
+      DATABASE_URL: ${DATABASE_URL:-postgres://afterword:${POSTGRES_PASSWORD:-afterword-local-development}@postgres:5432/afterword}
+      DATABASE_POOL_SIZE: ${DATABASE_POOL_SIZE:-10}
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=afterword-edge
+      - traefik.http.routers.backend.rule=Host(`${APP_HOST:-localhost}`) && (PathPrefix(`/api`) || Path(`/health`))
+      - traefik.http.routers.backend.entrypoints=web
+      - traefik.http.routers.backend.priority=10
+      - traefik.http.services.backend.loadbalancer.server.port=3001
+      - traefik.http.services.backend.loadbalancer.healthcheck.path=/health
+      - traefik.http.services.backend.loadbalancer.healthcheck.interval=10s
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3001/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      - edge-network
+      - data-network
+
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: afterword
+      POSTGRES_USER: afterword
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-afterword-local-development}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5433}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U afterword -d afterword"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+    networks:
+      - data-network
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "127.0.0.1:${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - data-network
+
+networks:
+  edge-network:
+    name: afterword-edge
+  data-network:
+    name: afterword-data
+    internal: true
+
+volumes:
+  redis-data:
+  postgres-data:

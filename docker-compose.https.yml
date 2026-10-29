@@ -1,0 +1,52 @@
+services:
+  edge:
+    command:
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --providers.docker.network=afterword-edge
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --accesslog=true
+      - --log.level=INFO
+      - --certificatesresolvers.afterword.acme.httpchallenge=true
+      - --certificatesresolvers.afterword.acme.httpchallenge.entrypoint=web
+      - --certificatesresolvers.afterword.acme.email=${LETSENCRYPT_EMAIL:?Set LETSENCRYPT_EMAIL}
+      - --certificatesresolvers.afterword.acme.storage=/letsencrypt/acme.json
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - letsencrypt-data:/letsencrypt
+
+  backend:
+    environment:
+      CORS_ORIGIN: https://${APP_HOST:?Set APP_HOST}
+      FRONTEND_URL: https://${APP_HOST:?Set APP_HOST}
+      GOOGLE_REDIRECT_URI: https://${APP_HOST:?Set APP_HOST}/api/auth/google/callback
+      AUTH_COOKIE_SECURE: "true"
+    labels:
+      - traefik.http.routers.backend.middlewares=afterword-https-redirect
+      - traefik.http.routers.backend-secure.rule=Host(`${APP_HOST:?Set APP_HOST}`) && (PathPrefix(`/api`) || Path(`/health`))
+      - traefik.http.routers.backend-secure.entrypoints=websecure
+      - traefik.http.routers.backend-secure.priority=10
+      - traefik.http.routers.backend-secure.tls=true
+      - traefik.http.routers.backend-secure.tls.certresolver=afterword
+      - traefik.http.routers.backend-secure.service=backend
+      - traefik.http.routers.backend-secure.middlewares=afterword-security-headers
+      - traefik.http.middlewares.afterword-https-redirect.redirectscheme.scheme=https
+      - traefik.http.middlewares.afterword-security-headers.headers.stsSeconds=31536000
+      - traefik.http.middlewares.afterword-security-headers.headers.stsIncludeSubdomains=true
+
+  frontend:
+    labels:
+      - traefik.http.routers.frontend.middlewares=afterword-https-redirect
+      - traefik.http.routers.frontend-secure.rule=Host(`${APP_HOST:?Set APP_HOST}`)
+      - traefik.http.routers.frontend-secure.entrypoints=websecure
+      - traefik.http.routers.frontend-secure.priority=1
+      - traefik.http.routers.frontend-secure.tls=true
+      - traefik.http.routers.frontend-secure.tls.certresolver=afterword
+      - traefik.http.routers.frontend-secure.service=frontend
+      - traefik.http.routers.frontend-secure.middlewares=afterword-security-headers
+
+volumes:
+  letsencrypt-data:
